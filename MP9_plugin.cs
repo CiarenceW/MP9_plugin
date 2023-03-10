@@ -12,10 +12,9 @@ namespace MP9_plugin
 {
     public class MP9_plugin : ModGunScript
     {
-        private float hammer_accel = -5000;
+        private float hammer_accel = -8000;
         private float m_charging_handle_amount;
         private ModHelpEntry help_entry;
-        public Sprite help_entry_sprite;
         private readonly float[] slide_push_hammer_curve = new float[] {
             0f,
             0f,
@@ -28,16 +27,14 @@ namespace MP9_plugin
         {
             return help_entry = new ModHelpEntry("MP9")
             {
-                info_sprite = help_entry_sprite,
-                title = "Heckler & Koch MR223",
-                description = "Heckler & Koch Match Rifle .223 Remington\n"
-                            + "Capacity: 10 + 1, 223 Remington\n"
+                info_sprite = spawn_info_sprite,
+                title = "Brügger & Thomet MP9",
+                description = "Brügger & Thomet Maschinenpistole 9 mm\n"
+                            + "Capacity: 30 + 1, 9x19mm NATO\n"
                             + "\n"
-                            + "Based on the AR-15 platform, the HK 416 improves on it thanks to its proprietary short-stroke gas piston, derived from the G36, itself derived from the AR-18. Thanks to this improvement, the H&K 416 outperformed the M4 in numerous tests conducted by the US Army's Delta Force.\n"
+                            + "The MP9 is based on the TMP, which was originally designed as a PDW, unlike the P90 and in some way, the MP7, the TMP was more pistol than SMG. Its characteristics were amongst the likes of the MP5K, the Micro Uzi or the Ingram MAC, the latter displaying the same intentions as the TMP, however without managing to reach them. The TMP distinguished itself from the rest thanks to its weight, and ergonomics, and for being easily controlable for a gun of its category.\n"
                             + "\n"
-                            + "In 2007, H&K introduced the MR223, the civilian variant of the 416, to the European market. This variant would later come to the US under the name of MR556.\n"
-                            + "\n"
-                            + "In order to be compliant in states with stricter gun laws, civilians need to install special after-market parts, such as a pin that blocks the magazine from being removed until the receiver is opened, or a slide lock that locks open on every shot. Fortunately for them, loopholes that permit the rifle to function somewhat normally exist."
+                            + "In 2003, B&T, a swiss company, purchased the design of the TMP from Steyr, and added many improvements, such as a foldable stock, a Picatinny rail on the top of the receiver, and a trigger safety, thanks to these, the MP9 is much more polyvalent than the TMP, and as such, is a fitting weapon for law-enforcement.\n"
             };
         }
         public override LocaleTactics GetGunTactics()
@@ -45,12 +42,11 @@ namespace MP9_plugin
             return new LocaleTactics()
             {
                 gun_internal_name = InternalName,
-                title = "Heckler & Koch MR223\n",
-                text = "A modded semi-auto rifle, made on a cheese-based diet\n" +
-                       "A .223 Remington semi-auto rifle made for the European sporting market, this gun functions mechanically the same as the H&K 416, without the auto fire mode.\n" +
+                title = "Brügger & Thomet MP9\n",
+                text = "A modded full-auto capable SMG, made on a trip to Tulsey Town\n" +
+                       "A 9mm SMG, manufactured as a further development from the TMP, for use by law-enforcement agencies.\n" +
                        "\n" +
-                       "This version of the gun is fitted with an auto-locking slide lock in an attempt to be California compliant.\n" +
-                       "To safely holster the MR223, flip on the safety."
+                       "To safely holster the MP9, flip on the safety."
             };
         }
         public override void InitializeGun()
@@ -101,12 +97,16 @@ namespace MP9_plugin
             }
 
             ApplyTransform("connector_lever", trigger.amount, transform.Find("connector_lever"));
+            ApplyTransform("sear", trigger.amount, transform.Find("sear"));
+            if (_select_fire.amount == 1f && trigger.amount >= 0.1f) ApplyTransform("disconnectar_full", trigger.amount, transform.Find("disconnectar"));
 
             if (slide.amount == 0 && _hammer_state == 3 && trigger.amount == 1)
             { // Simulate auto sear
                 hammer.amount = Mathf.MoveTowards(hammer.amount, _hammer_cocked_val, Time.deltaTime * Time.timeScale * 50);
                 if (hammer.amount == _hammer_cocked_val) _hammer_state = 2;
             }
+
+            if (_select_fire.amount < 1f && !_disconnector_needs_reset) ApplyTransform("disconnectar", hammer.amount, transform.Find("disconnectar"));
 
             if (hammer.amount == 0 && _hammer_state == 2)
             { // If hammer dropped and hammer was cocked then fire gun and decock hammer
@@ -146,7 +146,7 @@ namespace MP9_plugin
             }
             else
             {
-                m_charging_handle_amount = Mathf.Min(m_charging_handle_amount, slide.amount);
+                m_charging_handle_amount = 0;
             }
             if (trigger_safety.amount == 1f)
             {
