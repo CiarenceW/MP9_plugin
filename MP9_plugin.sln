@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MP9_plugin", "MP9_plugin.csproj", "{AFC0B0C0-37F3-4CC7-BADA-D02568F9FF80}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AFC0B0C0-37F3-4CC7-BADA-D02568F9FF80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC0B0C0-37F3-4CC7-BADA-D02568F9FF80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC0B0C0-37F3-4CC7-BADA-D02568F9FF80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC0B0C0-37F3-4CC7-BADA-D02568F9FF80}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1FB9018E-3CB9-462B-A21A-7B1AA4BB7C21}
+	EndGlobalSection
+EndGlobal
