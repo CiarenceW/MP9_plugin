@@ -14,7 +14,9 @@ namespace MP9_plugin
     {
         private float hammer_accel = -8000;
         private float m_charging_handle_amount;
+        private float safety_held_time;
         private ModHelpEntry help_entry;
+        private PlayerScript player_script;
         private readonly float[] slide_push_hammer_curve = new float[] {
             0f,
             0f,
@@ -64,10 +66,19 @@ namespace MP9_plugin
             trigger_safety.rotations[1] = transform.Find("trigger(linear)/trigger_safety_pressed").localRotation;
             trigger_safety.target_amount = 0f;
             trigger_safety.accel = -1f / (0.5f * (0.04f * 0.04f));
+            ReceiverEvents.StartListening(ReceiverEventTypeVoid.PlayerInitialized, ev =>
+            {
+                LocalAimHandler.player_instance.main_camera.nearClipPlane = 0.02f;
+            });
+            if (ReceiverCoreScript.Instance().player != null)
+            {
+                if (ReceiverCoreScript.Instance().player.lah.main_camera.nearClipPlane != 0.02f) ReceiverCoreScript.Instance().player.lah.main_camera.nearClipPlane = 0.02f; //I wanted to do that in the Awake method but apparently the main camera or lah is null or whatever so fuck me I guess I'm too tired for this
+            }
+            //player_script = (PlayerScript)typeof(LocalAimHandler).GetField("player_script", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ReceiverCoreScript.Instance().player.lah);
+            //player_script.main_camera_prefab.GetComponent<Camera>().nearClipPlane = 0.02f;
         }
         public override void UpdateGun()
         {
-            ReceiverCoreScript.Instance().player.lah.main_camera.nearClipPlane = 0.02f; //I wanted to do that in the Awake method but apparently the main camera or lah is null or whatever so fuck me I guess I'm too tired for this
 
             hammer.asleep = true;
             hammer.accel = hammer_accel;
@@ -83,6 +94,26 @@ namespace MP9_plugin
 
             if (hammer.amount == 1) _hammer_state = 3;
 
+            if (!IsSafetyOn())
+            {
+                if (player_input.GetButton(RewiredConsts.Action.Toggle_Safety_Auto_Mod))
+                {
+                    safety_held_time += Time.deltaTime;
+                }
+                else
+                {
+                    safety_held_time = 0;
+                }
+
+                if (safety_held_time >= 0.4f)
+                {
+                    SwitchFireMode();
+                }
+            }
+            else
+            {
+                safety_held_time = 0;
+            }
             if (IsSafetyOn())
             {
                 trigger.amount = Mathf.Min(trigger.amount, 0.1f);
@@ -122,6 +153,11 @@ namespace MP9_plugin
                 _disconnector_needs_reset = false;
             }
 
+            if (slide.amount > 0f && trigger.amount > 0f && _select_fire.amount < 1f)
+            {
+                _disconnector_needs_reset = true;
+            }
+
             if (slide_stop.amount == 1)
             {
                 slide_stop.asleep = true;
@@ -142,13 +178,13 @@ namespace MP9_plugin
 
             if (player_input.GetButton(Action.Pull_Back_Slide) || player_input.GetButtonUp(Action.Pull_Back_Slide))
             {
-                m_charging_handle_amount = slide.amount;
+                m_charging_handle_amount = Mathf.MoveTowards(m_charging_handle_amount, slide.amount, Time.deltaTime * 20f / Time.timeScale);
             }
             else
             {
-                m_charging_handle_amount = 0;
+                m_charging_handle_amount = Mathf.MoveTowards(m_charging_handle_amount, 0, Time.deltaTime * 50f);
             }
-            if (trigger_safety.amount == 1f)
+            /*if (trigger_safety.amount == 1f)
             {
                 trigger.amount = Mathf.Max(trigger.target_amount, 1f);
             }
@@ -160,7 +196,7 @@ namespace MP9_plugin
             {
                 trigger_safety.amount = Mathf.MoveTowards(trigger_safety.amount, 0f, Time.deltaTime * 10f);
             }
-            trigger_safety.UpdateDisplay();
+            trigger_safety.UpdateDisplay();*/
 
             ApplyTransform("charging_handle", m_charging_handle_amount, transform.Find("charging_handle"));
             ApplyTransform("locking_sear_spring_tige", slide_stop.amount, transform.Find("locking_sear_spring_tige"));
