@@ -23,7 +23,6 @@ namespace MP9_plugin
             0.35f,
             1f
         };
-        private FieldInfo trigger_safety_field;
         private RotateMover trigger_safety = new RotateMover();
         public override ModHelpEntry GetGunHelpEntry()
         {
@@ -55,11 +54,13 @@ namespace MP9_plugin
         {
             pooled_muzzle_flash = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.BerettaM9; })).pooled_muzzle_flash;
             //loaded_cartridge_prefab = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.Glock; })).loaded_cartridge_prefab;
+            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.StandardCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.StandardCapacity).glint_renderer.material;
+            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.LowCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.LowCapacity).glint_renderer.material;
         }
         public override void AwakeGun()
         {
             hammer.amount = 1;
-            trigger_safety_field = typeof(GunScript).GetField("trigger_safety", BindingFlags.Instance | BindingFlags.NonPublic);
+            var trigger_safety_field = typeof(GunScript).GetField("trigger_safety", BindingFlags.Instance | BindingFlags.NonPublic);
             trigger_safety = (RotateMover)trigger_safety_field.GetValue(this);
             trigger_safety.transform = transform.Find("trigger(linear)/trigger_safety");
             trigger_safety.rotations[0] = trigger_safety.transform.localRotation;
@@ -79,6 +80,10 @@ namespace MP9_plugin
         }
         public override void UpdateGun()
         {
+            if (ReceiverCoreScript.Instance().player.lah.IsAiming()) two_handed = true; //makes the game two handed when aiming, no real reason, just thought it'd make more sense. Noticeable when holding a flashlight.
+            else two_handed = false;
+
+
 
             hammer.asleep = true;
             hammer.accel = hammer_accel;
