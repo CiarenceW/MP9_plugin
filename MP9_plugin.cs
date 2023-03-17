@@ -54,6 +54,8 @@ namespace MP9_plugin
         {
             pooled_muzzle_flash = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.BerettaM9; })).pooled_muzzle_flash;
             //loaded_cartridge_prefab = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.Glock; })).loaded_cartridge_prefab;
+            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.StandardCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.StandardCapacity).glint_renderer.material;
+            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.LowCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.StandardCapacity).glint_renderer.material;
         }
         public override void AwakeGun()
         {
