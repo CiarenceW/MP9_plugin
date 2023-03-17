@@ -16,13 +16,13 @@ namespace MP9_plugin
         private float m_charging_handle_amount;
         private float safety_held_time;
         private ModHelpEntry help_entry;
-        private PlayerScript player_script;
         private readonly float[] slide_push_hammer_curve = new float[] {
             0f,
             0f,
             0.35f,
             1f
         };
+        private RotateMover stock = new RotateMover();
         private RotateMover trigger_safety = new RotateMover();
         public override ModHelpEntry GetGunHelpEntry()
         {
@@ -54,12 +54,13 @@ namespace MP9_plugin
         {
             pooled_muzzle_flash = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.BerettaM9; })).pooled_muzzle_flash;
             //loaded_cartridge_prefab = ((GunScript)ReceiverCoreScript.Instance().generic_prefabs.First(it => { return it is GunScript && ((GunScript)it).gun_model == GunModel.Glock; })).loaded_cartridge_prefab;
-            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.StandardCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.StandardCapacity).glint_renderer.material;
-            ReceiverCoreScript.Instance().GetMagazinePrefab("Ciarencew.MP9", MagazineClass.LowCapacity).glint_renderer.material = ReceiverCoreScript.Instance().GetMagazinePrefab("wolfire.glock_17", MagazineClass.LowCapacity).glint_renderer.material;
         }
         public override void AwakeGun()
         {
             hammer.amount = 1;
+            stock.transform = transform.Find("stock");
+            stock.rotations[0] = transform.Find("stock_unfolded").localRotation;
+            stock.rotations[1] = transform.Find("stock_folded").localRotation;
             var trigger_safety_field = typeof(GunScript).GetField("trigger_safety", BindingFlags.Instance | BindingFlags.NonPublic);
             trigger_safety = (RotateMover)trigger_safety_field.GetValue(this);
             trigger_safety.transform = transform.Find("trigger(linear)/trigger_safety");
@@ -203,6 +204,11 @@ namespace MP9_plugin
             }
             trigger_safety.UpdateDisplay();*/
 
+            if (player_input.GetButtonDown(14) && ReceiverCoreScript.Instance().player.lah.IsHoldingGun) //stock opening/closing logic
+            {
+                ToggleStock();
+            }
+
             ApplyTransform("charging_handle", m_charging_handle_amount, transform.Find("charging_handle"));
             ApplyTransform("locking_sear_spring_tige", slide_stop.amount, transform.Find("locking_sear_spring_tige"));
 
@@ -210,7 +216,47 @@ namespace MP9_plugin
 
             slide_stop.UpdateDisplay();
 
+            stock.UpdateDisplay();
+            stock.TimeStep(Time.deltaTime);
+
             UpdateAnimatedComponents();
+        }
+        private void ToggleStock()
+        {
+            stock.asleep = false;
+            if (stock.target_amount == 1f && slide.amount <= 0.03f)
+            {
+                stock.target_amount = 0f;
+                stock.accel = -1f;
+                stock.vel = -3f;
+                AudioManager.PlayOneShotAttached(sound_safety_on, stock.transform.gameObject);
+                rotation_transfer_y_min = 0.4f;
+                rotation_transfer_y_max = 0.8f;
+                rotation_transfer_x_min = -0.04f;
+                rotation_transfer_x_max = 0.04f;
+                recoil_transfer_x_min = 40f;
+                recoil_transfer_x_max = 80f;
+                recoil_transfer_y_min = -40f;
+                recoil_transfer_y_max = 40f;
+                sway_multiplier = 0.5f;
+            }
+            else if (stock.target_amount == 0f)
+            {
+                stock.target_amount = 1f;
+                stock.accel = 1;
+                stock.vel = 3;
+                AudioManager.PlayOneShotAttached(sound_safety_off, stock.transform.gameObject);
+                rotation_transfer_y_min = 2f;
+                rotation_transfer_y_max = 4f;
+                rotation_transfer_x_min = -0.2f;
+                rotation_transfer_x_max = 0.2f;
+                recoil_transfer_x_min = 100f;
+                recoil_transfer_x_max = 200f;
+                recoil_transfer_y_min = -100f;
+                recoil_transfer_y_max = 100f;
+                sway_multiplier = 2f;
+            }
+
         }
     }
 }
