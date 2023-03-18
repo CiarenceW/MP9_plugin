@@ -60,10 +60,10 @@ namespace MP9_plugin
         public override void AwakeGun()
         {
             hammer.amount = 1;
-            stock.transform = transform.Find("stock");
-            stock.rotations[0] = transform.Find("stock_unfolded").localRotation;
-            stock.rotations[1] = transform.Find("stock_folded").localRotation;
-            var trigger_safety_field = typeof(GunScript).GetField("trigger_safety", BindingFlags.Instance | BindingFlags.NonPublic);
+            //stock.transform = transform.Find("stock"); Who cares!!!!!!!!!!
+            //stock.rotations[0] = transform.Find("stock_unfolded").localRotation;
+            //stock.rotations[1] = transform.Find("stock_folded").localRotation;
+            var trigger_safety_field = typeof(GunScript).GetField("trigger_safety", BindingFlags.Instance | BindingFlags.NonPublic); //Reflection to access the trigger safety
             trigger_safety = (RotateMover)trigger_safety_field.GetValue(this);
             trigger_safety.transform = transform.Find("trigger(linear)/trigger_safety");
             trigger_safety.rotations[0] = trigger_safety.transform.localRotation;
@@ -86,8 +86,6 @@ namespace MP9_plugin
             if (ReceiverCoreScript.Instance().player.lah.IsAiming()) two_handed = true; //makes the game two handed when aiming, no real reason, just thought it'd make more sense. Noticeable when holding a flashlight.
             else two_handed = false;
 
-
-
             hammer.asleep = true;
             hammer.accel = hammer_accel;
 
@@ -102,7 +100,22 @@ namespace MP9_plugin
 
             if (hammer.amount == 1) _hammer_state = 3;
 
-            if (!IsSafetyOn())
+
+            if (IsSafetyOn())
+            {
+                trigger.amount = Mathf.Min(trigger.amount, 0.1f);
+
+                trigger.UpdateDisplay();
+
+                safety_held_time = 0;
+            }
+            if (_select_fire.amount == 0.5f)
+            {
+                trigger.amount = Mathf.Min(trigger.amount, 0.5f);
+
+                trigger.UpdateDisplay();
+            }
+            else
             {
                 if (player_input.GetButton(RewiredConsts.Action.Toggle_Safety_Auto_Mod))
                 {
@@ -118,23 +131,8 @@ namespace MP9_plugin
                     SwitchFireMode();
                 }
             }
-            else
-            {
-                safety_held_time = 0;
-            }
-            if (IsSafetyOn())
-            {
-                trigger.amount = Mathf.Min(trigger.amount, 0.1f);
 
-                trigger.UpdateDisplay();
-            }
-            if (_select_fire.amount == 0.5f)
-            {
-                trigger.amount = Mathf.Min(trigger.amount, 0.5f);
-
-                trigger.UpdateDisplay();
-            }
-
+            //we apply the transforms for the sear and connecter lever here, otherwise they aren't properly synced to the trigger, due to the fact that we screwed around with its value just before.
             ApplyTransform("connector_lever", trigger.amount, transform.Find("connector_lever"));
             ApplyTransform("sear", trigger.amount, transform.Find("sear"));
             if (_select_fire.amount == 1f && trigger.amount >= 0.1f) ApplyTransform("disconnectar_full", trigger.amount, transform.Find("disconnectar"));
@@ -206,11 +204,12 @@ namespace MP9_plugin
             }
             trigger_safety.UpdateDisplay();*/
 
-            if (player_input.GetButtonDown(14) && ReceiverCoreScript.Instance().player.lah.IsHoldingGun) //stock opening/closing logic
+            /*if (player_input.GetButtonDown(14) && ReceiverCoreScript.Instance().player.lah.IsHoldingGun) //stock opening/closing logic BORINGGGGGGGGGGGG
             {
                 ToggleStock();
-            }
+            }*/
 
+            //ApplyTransform("stock_lock", stock.amount, transform.Find("weapon_bt_mp9_stock_lock_LOD0"));
             ApplyTransform("charging_handle", m_charging_handle_amount, transform.Find("charging_handle"));
             ApplyTransform("locking_sear_spring_tige", slide_stop.amount, transform.Find("locking_sear_spring_tige"));
 
@@ -218,12 +217,12 @@ namespace MP9_plugin
 
             slide_stop.UpdateDisplay();
 
-            stock.UpdateDisplay();
-            stock.TimeStep(Time.deltaTime);
+            //stock.UpdateDisplay();
+            //stock.TimeStep(Time.deltaTime);
 
             UpdateAnimatedComponents();
         }
-        private void ToggleStock()
+        /*private void ToggleStock() //useless now because I disabled the stock from working because I'm evil
         {
             stock.asleep = false;
             if (stock.target_amount == 1f && slide.amount <= 0.03f)
@@ -258,7 +257,6 @@ namespace MP9_plugin
                 recoil_transfer_y_max = 100f;
                 sway_multiplier = 2f;
             }
-
-        }
+        }*/
     }
 }
